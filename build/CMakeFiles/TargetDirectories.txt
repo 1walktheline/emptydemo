@@ -1,0 +1,3 @@
+/home/ivy/emptydemo/build/CMakeFiles/emptydemo.dir
+/home/ivy/emptydemo/build/CMakeFiles/edit_cache.dir
+/home/ivy/emptydemo/build/CMakeFiles/rebuild_cache.dir

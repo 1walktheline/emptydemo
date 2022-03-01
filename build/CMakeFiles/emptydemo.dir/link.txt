@@ -1,0 +1,1 @@
+/usr/bin/c++ -std=c++11 -pthread CMakeFiles/emptydemo.dir/main.cpp.o CMakeFiles/emptydemo.dir/connect.cpp.o CMakeFiles/emptydemo.dir/basicSockets.cpp.o CMakeFiles/emptydemo.dir/secondary.cpp.o CMakeFiles/emptydemo.dir/Precompute.cpp.o CMakeFiles/emptydemo.dir/tools.cpp.o -o emptydemo 
