@@ -87,6 +87,93 @@ void getAShares(RSSVectorMyType &a, vector<myType> &data, int32_t bw){
 	}
 }
 
+void getAShares3in3(vector<myType> &a, vector<myType> &data, int32_t bw){
+    assert(bw <= 64);
+	uint64_t mask = (bw == 64 ? -1 : ((1ULL << bw) - 1));
+	size_t size = a.size();
+	vector<myType> tmp(size, 0),rb(size, 0), rc(size, 0);
+
+	if (partyNum == PARTY_A)
+	{
+		//调用precompute里面生成随机数的部分
+		//A生成两个随机数向量rb,rc
+		getRandomNum(rb, bw);
+		getRandomNum(rc, bw);
+		for (int i = 0; i < size; ++i)
+		{
+			a[i] = (data[i] - rb[i] - rc[i]) & mask;
+		}
+        sendVector<myType>(rb, PARTY_B, size);
+        sendVector<myType>(rc, PARTY_C, size);
+	}
+	else if (partyNum == PARTY_B)
+	{
+		receiveVector<myType>(rb, PARTY_A, size);
+		// receiveVector<myType>(rc, PARTY_A, size);
+        // receiveTwoVectors<myType>(rb, rc, PARTY_A, size, size);
+
+		for (int i = 0; i < size; ++i)
+		{
+			a[i] = rb[i] & mask;
+		}
+	}
+	else if (partyNum == PARTY_C)
+	{
+		receiveVector<myType>(rc, PARTY_A, size);
+		// receiveVector<myType>(tmp, PARTY_A, size);
+        // receiveTwoVectors<myType>(rc, tmp, PARTY_A, size, size);
+
+		for (int i = 0; i < size; ++i)
+		{
+			a[i] = rc[i] & mask;
+		}
+	}
+}
+
+void getAShares3in3(vector<myType> &a, vector<smallType> &data, int32_t bw){
+    assert(bw <= 64);
+	uint64_t mask = (bw == 64 ? -1 : ((1ULL << bw) - 1));
+	size_t size = a.size();
+	vector<myType> tmp(size, 0),rb(size, 0), rc(size, 0);
+
+	if (partyNum == PARTY_A)
+	{
+		//调用precompute里面生成随机数的部分
+		//A生成两个随机数向量rb,rc
+		getRandomNum(rb, bw);
+		getRandomNum(rc, bw);
+		for (int i = 0; i < size; ++i)
+		{
+			a[i] = (uint64_t(data[i]) - rb[i] - rc[i]) & mask;
+		}
+        sendVector<myType>(rb, PARTY_B, size);
+        sendVector<myType>(rc, PARTY_C, size);
+	}
+	else if (partyNum == PARTY_B)
+	{
+		receiveVector<myType>(rb, PARTY_A, size);
+		// receiveVector<myType>(rc, PARTY_A, size);
+        // receiveTwoVectors<myType>(rb, rc, PARTY_A, size, size);
+
+		for (int i = 0; i < size; ++i)
+		{
+			a[i] = rb[i] & mask;
+		}
+	}
+	else if (partyNum == PARTY_C)
+	{
+		receiveVector<myType>(rc, PARTY_A, size);
+		// receiveVector<myType>(tmp, PARTY_A, size);
+        // receiveTwoVectors<myType>(rc, tmp, PARTY_A, size, size);
+
+		for (int i = 0; i < size; ++i)
+		{
+			a[i] = rc[i] & mask;
+		}
+	}
+}
+
+
 void getBShares(RSSVectorMyType &a, vector<myType> &data, int32_t bw){
     assert(bw <= 64);
 	uint64_t mask = (bw == 64 ? -1 : ((1ULL << bw) - 1));
@@ -496,7 +583,7 @@ void getBReconstruct3in3(vector<myType> &data, vector<myType> &result, size_t si
 }
 
 
-void getBReconstruct3in3(vector<smallType> &data, vector<smallType> &result, size_t size, string str, int32_t bw, bool print){
+void getBReconstruct3in3(vector<smallType> &data, vector<myType> &result, size_t size, string str, int32_t bw, bool print){
     log_print("Reconst: smallType, smallType， Boolean， 3-out-of-3");
 	assert(data.size() == size && "data.size mismatch for reconstruct function");
 	assert(result.size() == size && "result.size mismatch for reconstruct function");
@@ -515,15 +602,15 @@ void getBReconstruct3in3(vector<smallType> &data, vector<smallType> &result, siz
 		// addVectors<myType>(temp_B, temp_A, b, size);
 		// //异或mask
 		for(int i=0; i<size; ++i){
-            result[i] = data[i] ^ temp_A[i] ^temp_B[i];
+            result[i] = data[i] ^ temp_A[i] ^ temp_B[i];
 			result[i] = result[i] & mask;
 		}
-		sendVector<smallType>(result, PARTY_A, size);
-		sendVector<smallType>(result, PARTY_B, size);
+		sendVector<myType>(result, PARTY_A, size);
+		sendVector<myType>(result, PARTY_B, size);
 	}
 
 	if (partyNum == PARTY_A or partyNum == PARTY_B)
-		receiveVector<smallType>(result, PARTY_C, size);
+		receiveVector<myType>(result, PARTY_C, size);
 
 	if (print)
 	{
@@ -947,8 +1034,9 @@ void B2A_vector(vector<smallType> &a, vector<myType> &res, int32_t bw_A, int32_t
     uint64_t mask_A = (bw_A == 64 ? -1 : ((1ULL << bw_A) - 1));
     uint64_t mask_B = (bw_B == 64 ? -1 : ((1ULL << bw_B) - 1));
 
-    vector<myType> recB_a(size, 0), shareA(size, 0);
+    vector<myType> recB_a(size, 0);
     getBReconstruct3in3(a, recB_a, size, "", bw_A, false);
+    getAShares3in3(res, recB_a, bw_B);
 
 
     // //A gets [res]_0 = -a1, B gets [res]_1 = -a2 randomly
@@ -1017,15 +1105,6 @@ void B2A_vector(vector<smallType> &a, vector<myType> &res, int32_t bw_A, int32_t
     // }
 
 
-
-
-
-
-
-
-
-
-
 }
 
 
@@ -1059,22 +1138,30 @@ void z_extend(RSSVectorMyType &x, RSSVectorMyType &x_extend, int32_t bw_x, int32
     vector<smallType> u(size, 0), v(size, 0);
     wrap3_uv(x, u, v, size, bw_x);
 
+    //u是公开的，v是3共3的
+
     //求B2A(u, dest_bw = n-m), B2A(v, dest_bw = n-m)
-    B2A_vector(u, u_extend, 1, bw_y-bw_x, size);
+    // B2A_vector(u, u_extend, 1, bw_y-bw_x, size);
     B2A_vector(v, v_extend, 1, bw_y-bw_x, size);
+
 
     //[x]_i = x_i - (u_i【N-M】 + v_i【N-M】) * M
     vector<myType> send(size, 0), recv(size, 0);
     for (int i = 0; i < size; ++i)
     {
-        x_extend[i].first = (x[i].first - uint64_t(u[i] + v[i]) * M) & mask_y;
+        if(partyNum == PARTY_A){
+            x_extend[i].first = (x[i].first - uint64_t(u[i] + v_extend[i]) * M) & mask_y;
+        }
+        else{
+            x_extend[i].first = (x[i].first - uint64_t(v_extend[i]) * M) & mask_y;
+        }
         send[i] = x_extend[i].first;
     }
     
     //3in3 to 2in3
     thread *threads = new thread[2];
-	threads[0] = thread(sendVector<myType>, ref(send), nextParty(partyNum), size);
-	threads[1] = thread(receiveVector<myType>, ref(recv), prevParty(partyNum), size);
+	threads[0] = thread(sendVector<myType>, ref(send), prevParty(partyNum), size);
+	threads[1] = thread(receiveVector<myType>, ref(recv), nextParty(partyNum), size);
 	for (int i = 0; i < 2; i++)
 		threads[i].join();
 	delete[] threads;
@@ -1181,23 +1268,24 @@ void getSliceRSSVectorMyType(RSSVectorMyType &a, RSSVectorMyType &b, size_t left
     cout<<"got slice [left:right]!"<<endl;
 }
 
-//TODO:矩阵乘法,bw_A * bw_B —> bw_A + bw_B + extra_bits
+// 矩阵乘法,bw_A * bw_B —> bw_A + bw_B + extra_bits
 void matMult(RSSVectorMyType &a, RSSVectorMyType &b, RSSVectorMyType &c, size_t rows, size_t common_dim, size_t columns, int32_t bw_A, int32_t bw_B, int32_t &bw_C){
     assert(a.size() == (rows * common_dim) && "a.size does not match");
     assert(b.size() == (common_dim * columns) && "b.size does not match");
     assert(c.size() == (rows * columns) && "c.size does not match");
 
     int32_t extra_bits = ceil(log2(common_dim));
-    bw_C = (((bw_A + bw_B + extra_bits) < 64) ? (bw_A + bw_B + extra_bits) : 64);
+    bw_C = (((bw_A + bw_B) < 64) ? (bw_A + bw_B) : 64);
     uint64_t mask_a = (bw_A == 64 ? -1 : ((1ULL << bw_A) - 1));
 	uint64_t mask_b = (bw_B == 64 ? -1 : ((1ULL << bw_B) - 1));
 	uint64_t mask_c = (bw_C == 64 ? -1 : ((1ULL << bw_C) - 1));
     
     RSSVectorMyType a_extend(rows * common_dim, make_pair(0,0)), b_transpose(common_dim * columns, make_pair(0,0));
     //对A做符号扩展或零扩展（TODO: 实际上应该是位宽更大的一方进行扩展）
-    cout<<"extend matrix a."<<endl;
-    z_extend(a, a_extend, bw_A, bw_A + extra_bits, rows * common_dim);
-    cout<<"in function matMult, a_extend finished."<<endl;
+    // cout<<"extend matrix a."<<endl;
+    // z_extend(a, a_extend, bw_A, bw_A + extra_bits, rows * common_dim);
+    // cout<<"in function matMult, a_extend finished."<<endl;
+    // print_RSSVectorMyType(a_extend, "extended matrix a:");
     // A矩阵保持不变，B转置
     cout<<"transpose matrix b."<<endl;
     // matrix_transpose(b, b_transpose, common_dim, columns);
@@ -1212,15 +1300,15 @@ void matMult(RSSVectorMyType &a, RSSVectorMyType &b, RSSVectorMyType &c, size_t 
     // A提取出来rows个common_dim维的向量，B转置后提取出来column个common_dim维的向量
     // i:rows循环——>j:columns循环：res[i][j]=A向量[i] dotProduct B向量j
 
-    RSSVectorMyType a_slice(common_dim, make_pair(0,0)), b_slice(common_dim, make_pair(0,0)), tmp(common_dim, make_pair(0,0));
+    RSSVectorMyType a_slice(common_dim, make_pair(0,0)), b_slice(common_dim, make_pair(0,0)), tmp(common_dim, make_pair(0,0)), tmp_extend(common_dim, make_pair(0,0));
     // c[i][j] = a第i个common_dim维向量 dotProduct b(after transpose)第j个common_dim维向量
 
-    // TODO: 这块都没执行就报错了
+    //
     for (int i = 0; i < rows; ++i)
     {
         cout<<"\n/*******************************************************************/\n"<<endl; 
         cout<<"\ni="<<i<<endl;
-        getSliceRSSVectorMyType(a_extend, a_slice, i*common_dim, (i+1)*common_dim);
+        getSliceRSSVectorMyType(a, a_slice, i*common_dim, (i+1)*common_dim);
         print_RSSVectorMyType(a_slice, "a_slice=");
         for (int j = 0; j <columns; ++j)
         {
@@ -1230,29 +1318,29 @@ void matMult(RSSVectorMyType &a, RSSVectorMyType &b, RSSVectorMyType &c, size_t 
             print_RSSVectorMyType(b_slice, "b_slice=");
 
             cout<<"\ncalculating the[i][j]th term without accumulate:";
-            vectorMult_nu(a_slice, b_slice, tmp, bw_A + extra_bits, bw_B, bw_C, common_dim);
+            vectorMult_nu(a_slice, b_slice, tmp, bw_A, bw_B, bw_C, common_dim);
             cout<<"finished calculating the[i][j]th term without accumulate.";
             print_RSSVectorMyType(tmp, "value of tmp:");
+            /*此处注意： 计算完之后，进行accumulate操作时，对于tmp[i]各分量相加的wrap值是不要的，而由于累加带来的进位是要保留的（在更大的位宽bwa+bwb+extrabits）（该问题是由于位宽会扩大造成的），这种情况下不能直接加，所以考虑先将结果进行零扩展，再累加时产生的进位会因为位宽限制不用再考虑*/
+            z_extend(tmp, tmp_extend, bw_A+bw_B, bw_A+bw_B+extra_bits, common_dim);
 
             c[i*columns + j] = make_pair(0, 0);
 
             for (int k = 0; k < common_dim; ++k){
-                c[i*columns + j].first += tmp[k].first;
-                c[i*columns + j].second += tmp[k].second;
+                c[i*columns + j].first += tmp_extend[k].first;
+                c[i*columns + j].second += tmp_extend[k].second;
             }
             cout<<"finished calculating the[i][j]th term accumulated.";
             cout<<"c["<<i<<"]["<<j<<"]="<<+c[i*columns + j].first<<", "<<+c[i*columns + j].second<<endl;
         }
     }
-
-
-    //矩阵乘法本地项的计算
-
-    //矩阵乘法的wrap计算
-
-    //矩阵乘法的mux计算
-
-    //矩阵乘法各项的组合
+    bw_C = (((bw_A + bw_B + extra_bits) < 64) ? (bw_A + bw_B + extra_bits) : 64);
+	mask_c = (bw_C == 64 ? -1 : ((1ULL << bw_C) - 1));
+    for (int i = 0; i < rows*columns; ++i)
+    {
+        c[i].first &= mask_c;
+        c[i].second &= mask_c;
+    }
 
     //TODO: 截断在什么地方用？
 }
@@ -1260,7 +1348,15 @@ void matMult(RSSVectorMyType &a, RSSVectorMyType &b, RSSVectorMyType &c, size_t 
 //其它构建块
 
 
+//除法
 
+//sigmoid
+
+//tanh
+
+//ReLU
+
+//maxpool
 
 
 

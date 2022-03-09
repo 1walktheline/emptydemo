@@ -15,19 +15,21 @@ extern void end_communication(string str);
 
 void millInit();
 
-void getAShares(RSSVectorMyType &a, const vector<myType> &data, int32_t bw);
-void getBShares(RSSVectorMyType &a, const vector<myType> &data, int32_t bw);
-void getBShares(RSSVectorSmallType &a, const vector<smallType> &data, int32_t bw);
-void getBShares3in3(vector<myType> &a, const vector<myType> &data, int32_t bw);
-void getBShares3in3(vector<smallType> &a, const vector<smallType> &data, int32_t bw);
+void getAShares(RSSVectorMyType &a, vector<myType> &data, int32_t bw);
+void getAShares3in3(vector<myType> &a, vector<myType> &data, int32_t bw);
+void getAShares3in3(vector<myType> &a, vector<smallType> &data, int32_t bw);
+void getBShares(RSSVectorMyType &a, vector<myType> &data, int32_t bw);
+void getBShares(RSSVectorSmallType &a, vector<smallType> &data, int32_t bw);
+void getBShares3in3(vector<myType> &a, vector<myType> &data, int32_t bw);
+void getBShares3in3(vector<smallType> &a, vector<smallType> &data, int32_t bw);
 
-void getAReconstructOne(const RSSMyType &data, myType &result,  string str, bool print, int32_t bw);
-void getAReconstruct(const RSSVectorMyType &data, vector<myType> &result, size_t size, string str, bool print, int32_t bw);
-void getBReconstruct(const RSSVectorMyType &data, vector<myType> &result, size_t size, string str, bool print, int32_t bw);
-void getBReconstruct(const RSSVectorSmallType &data, vector<smallType> &result, size_t size, string str, bool print, int32_t bw);
-void getAReconstruct3in3(const vector<myType> &data, vector<myType> &result, size_t size, string str, int32_t bw, bool print);
-void getBReconstruct3in3(const vector<myType> &data, vector<myType> &result, size_t size, string str, int32_t bw, bool print);
-void getBReconstruct3in3(const vector<smallType> &data, vector<smallType> &result, size_t size, string str, int32_t bw, bool print);
+void getAReconstructOne(RSSMyType &data, myType &result,  string str, bool print, int32_t bw);
+void getAReconstruct(RSSVectorMyType &data, vector<myType> &result, size_t size, string str, bool print, int32_t bw);
+void getBReconstruct(RSSVectorMyType &data, vector<myType> &result, size_t size, string str, bool print, int32_t bw);
+void getBReconstruct(RSSVectorSmallType &data, vector<smallType> &result, size_t size, string str, bool print, int32_t bw);
+void getAReconstruct3in3(vector<myType> &data, vector<myType> &result, size_t size, string str, int32_t bw, bool print);
+void getBReconstruct3in3(vector<myType> &data, vector<myType> &result, size_t size, string str, int32_t bw, bool print);
+void getBReconstruct3in3(vector<smallType> &data, vector<myType> &result, size_t size, string str, int32_t bw, bool print);
 
 void getTruncate(RSSVectorMyType &data, int32_t bw, int32_t power);
 
